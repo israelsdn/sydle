@@ -1,0 +1,17 @@
+---
+description: Estrutura dos scripts embarcados no SYDLE
+globs: scripts/**/*.js
+alwaysApply: false
+---
+
+# Scripts embarcados
+
+Ordem: cabeçalho com `=` e lista numerada, validação, `require` e ids, processamento, efeitos, funções no final.
+
+`throw` para dado inválido. `return` quando não há o que processar. `require` com `const` no topo. Ids em `SCREAMING_SNAKE_CASE`. Id desconhecido fica `""`, com comentário de que falta preencher.
+
+Comentário acima do bloco, intenção de negócio, não paráfrase da linha. Função auxiliar explica o que faz.
+
+Normalizar valor único ou lista para array. Optional chaining na entrada. Calcular incluídos e removidos com `Set` antes de salvar ou integrar.
+
+Detalhe na skill `sydle`, arquivo `scripts-embarcados.md`.
