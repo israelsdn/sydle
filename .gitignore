@@ -2,6 +2,7 @@
 .env.local
 .env.*.local
 .sydle-session.json
+.azure-session.json
 .sydle-browser/
 
 output/

@@ -14,4 +14,4 @@ Comentário acima do bloco, intenção de negócio, não paráfrase da linha. Fu
 
 Normalizar valor único ou lista para array. Optional chaining na entrada. Calcular incluídos e removidos com `Set` antes de salvar ou integrar.
 
-Detalhe na skill `sydle`, arquivo `scripts-embarcados.md`.
+Detalhe na skill `sydle`, arquivo `references/scripts-embarcados.md`.

@@ -1,6 +1,6 @@
 // =====================================================================
 // SESSÃO DO SYDLE
-// Lê e grava a sessão em .sydle-session.json, na raiz do projeto.
+// Lê e grava a sessão em .sydle-session.json, na pasta da skill.
 // Esse arquivo não deve ser versionado. Não há usuário nem senha.
 // =====================================================================
 
@@ -8,28 +8,9 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const RAIZ = acharRaizProjeto();
-const ARQUIVO_SESSAO = resolve(RAIZ, ".sydle-session.json");
-const ARQUIVO_ENV = resolve(RAIZ, ".env");
-
-function acharRaizProjeto() {
-    const pastaSkill = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-    const candidatos = [
-        process.env.SYDLE_PROJECT_ROOT,
-        process.cwd(),
-        pastaSkill,
-    ].filter(Boolean);
-
-    for (const candidato of candidatos) {
-        const raiz = resolve(candidato);
-
-        if (existsSync(resolve(raiz, ".env"))) {
-            return raiz;
-        }
-    }
-
-    return resolve(pastaSkill);
-}
+const PASTA_SKILL = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const ARQUIVO_SESSAO = resolve(PASTA_SKILL, ".sydle-session.json");
+const ARQUIVO_ENV = resolve(PASTA_SKILL, ".env");
 
 export function chaveSessao(cliente, ambiente) {
     return normalizarNome(cliente) + ":" + normalizarNome(ambiente);
@@ -37,7 +18,9 @@ export function chaveSessao(cliente, ambiente) {
 
 export function lerEnv() {
     if (!existsSync(ARQUIVO_ENV)) {
-        throw new Error("Arquivo .env não encontrado na raiz do projeto.");
+        throw new Error(
+            "Arquivo .env não encontrado em .cursor/skills/sydle/."
+        );
     }
 
     const env = {};

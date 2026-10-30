@@ -1,7 +1,8 @@
 // =====================================================================
 // LOGIN SYDLE VIA EDGE
 // Abre o Microsoft Edge (nunca o browser integrado do Cursor), espera o
-// usuário autenticar, grava .sydle-session.json e fecha a janela do Edge.
+// usuário autenticar, grava .sydle-session.json e fecha a janela.
+// A confirmação da sessão fica no card, no login.md, e não espera o fechamento.
 // Uso: node scripts/login-edge.mjs <CLIENTE> <AMBIENTE>
 // =====================================================================
 
@@ -20,6 +21,10 @@ import {
 const PORTA_DEBUG = Number(process.env.SYDLE_EDGE_DEBUG_PORT || 9222);
 const TEMPO_MAXIMO_MS = Number(process.env.SYDLE_LOGIN_TIMEOUT_MS || 10 * 60 * 1000);
 const INTERVALO_POLL_MS = 2000;
+// O Explorer grava primeiro um access token curto (~1 min). Só gravamos
+// depois que a validade restante passar deste mínimo, como no login normal.
+const MIN_VIDA_RESTANTE_SEGUNDOS = Number(process.env.SYDLE_TOKEN_MIN_TTL_S || 5 * 60);
+const POLLS_ESTAVEIS = 2;
 
 const cliente = process.argv[2];
 const ambiente = process.argv[3];
@@ -38,13 +43,21 @@ const perfilEdge = join(tmpdir(), "sydle-edge-login-" + cliente + "-" + ambiente
 let processoEdge = null;
 
 try {
-    await garantirPortaLivre(PORTA_DEBUG);
-    limparPerfil(perfilEdge);
-    mkdirSync(perfilEdge, { recursive: true });
+    const jaAberto = await portaEmUso(PORTA_DEBUG);
 
-    processoEdge = abrirEdge(urlLogin, perfilEdge, PORTA_DEBUG);
+    if (!jaAberto) {
+        limparPerfil(perfilEdge);
+        mkdirSync(perfilEdge, { recursive: true });
+        processoEdge = abrirEdge(urlLogin, perfilEdge, PORTA_DEBUG);
+    }
+
     console.log("Edge aberto em " + urlLogin);
-    console.log("Faça o login. A janela fecha sozinha quando a sessão for capturada.");
+    console.log("Faça o login. A janela fecha sozinha quando a sessão for gravada.");
+    console.log(
+        "Aguardando token com pelo menos " +
+            MIN_VIDA_RESTANTE_SEGUNDOS +
+            "s de validade restante (o Explorer costuma renovar o token curto inicial)."
+    );
 
     const credencial = await esperarToken(PORTA_DEBUG, TEMPO_MAXIMO_MS);
     await validarToken(origem, credencial.token);
@@ -65,11 +78,11 @@ try {
             (credencial.usuario ? " (" + credencial.usuario + ")" : "") +
             "."
     );
+
+    await fecharEdge(PORTA_DEBUG, processoEdge);
 } catch (erro) {
     console.error(String(erro && erro.message ? erro.message : erro));
     process.exitCode = 1;
-} finally {
-    await fecharEdge(PORTA_DEBUG, processoEdge);
 }
 
 function abrirEdge(url, perfil, porta) {
@@ -112,6 +125,9 @@ function acharEdge() {
 
 async function esperarToken(porta, tempoMaximoMs) {
     const inicio = Date.now();
+    let avisouCurto = false;
+    let candidata = null;
+    let pollsEstaveis = 0;
 
     while (Date.now() - inicio < tempoMaximoMs) {
         try {
@@ -127,7 +143,51 @@ async function esperarToken(porta, tempoMaximoMs) {
                 const credencial = await lerCredencialPagina(paginaSydle.webSocketDebuggerUrl);
 
                 if (credencial?.token) {
-                    return credencial;
+                    const agora = Math.floor(Date.now() / 1000);
+                    const restantes = credencial.expiraEm
+                        ? Number(credencial.expiraEm) - agora
+                        : null;
+
+                    if (restantes == null) {
+                        return credencial;
+                    }
+
+                    if (restantes < MIN_VIDA_RESTANTE_SEGUNDOS) {
+                        pollsEstaveis = 0;
+                        candidata = null;
+
+                        if (!avisouCurto) {
+                            console.log(
+                                "Token inicial ainda curto (" +
+                                    restantes +
+                                    "s restantes). Mantendo o Edge aberto até o Explorer renovar."
+                            );
+                            avisouCurto = true;
+                        }
+                    } else {
+                        const mesma =
+                            candidata &&
+                            candidata.token === credencial.token &&
+                            Number(candidata.expiraEm) === Number(credencial.expiraEm);
+
+                        if (mesma) {
+                            pollsEstaveis += 1;
+                        } else {
+                            candidata = credencial;
+                            pollsEstaveis = 1;
+                            console.log(
+                                "Token com " +
+                                    restantes +
+                                    "s restantes. Confirmando estabilidade (" +
+                                    POLLS_ESTAVEIS +
+                                    " leituras)."
+                            );
+                        }
+
+                        if (pollsEstaveis >= POLLS_ESTAVEIS) {
+                            return candidata;
+                        }
+                    }
                 }
             }
         } catch {
@@ -137,7 +197,11 @@ async function esperarToken(porta, tempoMaximoMs) {
         await dormir(INTERVALO_POLL_MS);
     }
 
-    throw new Error("Tempo esgotado aguardando login no Edge.");
+    throw new Error(
+        "Tempo esgotado aguardando token estável no Edge (mínimo " +
+            MIN_VIDA_RESTANTE_SEGUNDOS +
+            "s de validade restante)."
+    );
 }
 
 async function lerCredencialPagina(webSocketUrl) {
@@ -226,24 +290,20 @@ async function fecharEdge(porta, processo) {
     await dormir(500);
 }
 
+async function portaEmUso(porta) {
+    try {
+        const versao = await getJson("http://127.0.0.1:" + porta + "/json/version");
+        return Boolean(versao?.webSocketDebuggerUrl);
+    } catch {
+        return false;
+    }
+}
+
 function limparPerfil(perfil) {
     try {
         rmSync(perfil, { recursive: true, force: true });
     } catch {
         // Perfil em uso residual; Edge reaproveita.
-    }
-}
-
-async function garantirPortaLivre(porta) {
-    try {
-        const versao = await getJson("http://127.0.0.1:" + porta + "/json/version");
-
-        if (versao?.webSocketDebuggerUrl) {
-            await fecharEdge(porta, null);
-            await dormir(800);
-        }
-    } catch {
-        // Porta livre.
     }
 }
 

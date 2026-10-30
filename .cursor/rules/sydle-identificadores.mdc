@@ -21,4 +21,4 @@ Não cortar partícula que faz parte da palavra (`detalhe`, `destino`, `empenhad
 
 Pergunta em forma afirmativa (`ativo`, não `naoAtivo`). Método começa por verbo.
 
-Detalhe na skill `sydle`, arquivo `identificadores.md`.
+Detalhe na skill `sydle`, arquivo `references/identificadores.md`.

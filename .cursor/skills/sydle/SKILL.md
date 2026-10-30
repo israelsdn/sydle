@@ -3,53 +3,61 @@ name: sydle
 description: >-
   Conecta, autentica e usa a API e os scripts do SYDLE ONE. Use quando o
   usuário mencionar SYDLE, classe, método embarcado, pacote, ambiente
-  (TJCE, MPCE, DEV, HOM, PROD), login, sessão, token, _get, _search,
-  _patch ou automação na plataforma.
+  (TJCE, MPCE, SEMAS, DEV, HOM, PROD), login, sessão, token, _get, _search,
+  _patch ou automação na plataforma. Não é creating-a-skill nem create-rule.
+version: 1.3.0
 ---
 
 # SYDLE ONE
 
-Cliente e estágio identificam o ambiente (`TJCE` + `DEV`). O link fica no `.env`. A sessão de trabalho é um Bearer gravado em `.sydle-session.json`. Não há usuário nem senha. Token e o header `Authorization` não aparecem em chat, log, código versionado nem mensagem de erro.
+Cliente e estágio identificam o ambiente (`TJCE` + `DEV`). Abra só o arquivo da tarefa.
 
-## Começar
-
-1. Confirme o par cliente + estágio. Sem o link no `.env`, não chame a API.
-2. Nas chamadas, use `obterAuthorizationSessao(cliente, ambiente)`. O retorno já é `Bearer ...`. Não peça usuário nem senha.
-3. Escolha o tipo de código:
-   - Script que roda **dentro** do SYDLE → [scripts-embarcados.md](scripts-embarcados.md)
-   - Tooling Node que chama a API por HTTP → [conexao.md](conexao.md)
-
-## Login
-
-A rota de interface é `{origem}/app/elogroup` em todos os ambientes. Não há usuário nem senha no `.env` nem no fluxo de conexão.
-
-Sem sessão válida, rode `node .cursor/skills/sydle/scripts/login-edge.mjs <CLIENTE> <AMBIENTE>`. Isso abre o **Microsoft Edge** (Windows), captura o token e **fecha o Edge** ao concluir. **Nunca** use o browser integrado do Cursor para login.
-
-Só conecte em ambiente cujo link já foi informado. Links novos chegam aos poucos: cada um vira `SYDLE_<CLIENTE>_<AMBIENTE>_URL`. Sem o link, não invente host.
-
-Detalhe da sessão: [login.md](login.md). O módulo que lê a sessão é [scripts/lib/sessao-sydle.mjs](scripts/lib/sessao-sydle.mjs).
-
-## Achar e ler objetos
-
-| Situação | Caminho |
+| Tarefa | Arquivo |
 |---|---|
-| Só o nome (ou parte) da classe | `getObjectList` com `searchText`. Não filtrar a meta-classe por `name`. |
-| Já tem o `_id` da classe e quer a definição | `POST` na meta-classe `000000000000000000000000` com `{ "_id": "<id da classe>" }` |
-| Já tem o `_id` de um objeto | `POST {url}/_classId/<classId>/_get/` com `{ "_id": "<id do objeto>" }` |
-| Alterar a definição | `_patch` com `_operationsList` montada no call site |
+| Login, sessão, Edge | [login.md](references/login.md) |
+| Chamada HTTP | [conexao.md](references/conexao.md) |
+| Script que roda dentro da plataforma | [scripts-embarcados.md](references/scripts-embarcados.md) |
+| Identifier, label, PascalCase | [identificadores.md](references/identificadores.md) |
+| Motor, erro, modelagem | [plataforma.md](references/plataforma.md) |
 
-`classId` no path é a classe da operação. `_id` no body é o objeto. Os dois não se trocam.
+A sessão é lida por [scripts/lib/sessao-sydle.mjs](scripts/lib/sessao-sydle.mjs). Sem sessão válida, siga o [login.md](references/login.md).
 
-Todos os métodos da API, inclusive leitura, são `POST`. Parâmetros vão no body.
+## Gatilhos
 
-`204` é sucesso sem corpo (nenhum objeto casou). `403` é método não autorizado naquela classe; não distingue classe inexistente.
+SYDLE, classe, método embarcado, pacote, ambiente (TJCE, MPCE, SEMAS, DEV, HOM, PROD), login, sessão, token, `_get`, `_search`, `_patch` ou automação na plataforma.
 
-## Escrever código
+## Entradas
 
-- Identificadores em português, sem partícula de ligação (`da`, `do`, `de`, `e`). Label visível pode ter preposição. Ver [identificadores.md](identificadores.md).
-- Motor do SYDLE: `let` tem escopo de função, não de bloco. Não repetir o mesmo `let` e não declarar `let` dentro de laço.
-- Não inventar id de classe, template ou atribuição. Constante vazia e aviso explícito quando o id não foi dado.
-- Referência a classe do tipo interface leva `_id` e `_classId`.
-- Não persistir (`_create`, `_update`, `_delete`) em rascunho nem em `_getMetadata`.
+- Cliente e estágio, no pedido ou no par já usado na sessão.
+- `SYDLE_<CLIENTE>_<AMBIENTE>_URL` no `.env` da pasta da skill (`.cursor/skills/sydle/`). Sem essa variável, não há host.
+- O pedido: login, chamada HTTP, script embarcado, identifier ou modelagem.
 
-Modelagem, performance e vocabulário da plataforma: [plataforma.md](plataforma.md).
+## Saídas
+
+- O arquivo da tarefa, aberto sob demanda.
+- Sessão em `.cursor/skills/sydle/.sydle-session.json` quando o login pelo Edge termina.
+- Chamada, script ou identifier quando o pedido é esse.
+
+## Limites
+
+- Não pedir usuário nem senha. Não imprimir token.
+- Não inventar host, id de classe, template ou atribuição.
+- Não abrir o browser do Cursor para login. O login é o Edge, pelo `login-edge.mjs`.
+- Ao abrir o Edge, abrir na mesma hora o card de confirmação e só então verificar a sessão. Não esperar a janela fechar. Depois de gravar a sessão, o script fecha o Edge.
+- Não persistir em rascunho nem em `_getMetadata`.
+- Script embarcado não chama a API por HTTP. Tooling externo não usa `_utils` como se fosse script da plataforma.
+- Não gravar outra skill com estes gatilhos.
+
+## Verificação
+
+A sessão vale quando `GET {origem}/api/1/elogroup/sys/auth/validateToken` responde 200, sem imprimir o corpo. Chamada HTTP cita o nome da variável ausente, nunca o valor. Identifier novo não carrega partícula que só liga palavras. Script embarcado segue a ordem do [scripts-embarcados.md](references/scripts-embarcados.md).
+
+O pacote está íntegro quando este arquivo tem `name`, `description` e `version`, a `description` tem até 1024 caracteres, os cinco links acima resolvem e [login-edge.mjs](scripts/login-edge.mjs) continua no path citado.
+
+## Critério de falha
+
+Falhou se conectou sem `URL` no `.env`, se inventou host ou id, se pediu senha, se abriu o browser do Cursor para login, se esperou o Edge fechar para verificar a sessão, se a `description` passou de 1024 caracteres ou passou a narrar o fluxo, ou se um reference aponta para outro reference.
+
+## Owner
+
+Israel.

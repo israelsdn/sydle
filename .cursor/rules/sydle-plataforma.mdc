@@ -15,4 +15,4 @@ Referência de interface inclui `_classId` junto do `_id`. Não inventar id de c
 
 Erro que o usuário vê: `throw "frase."`. Erro técnico capturado e logado: `new Error`, com `stack` no log e frase limpa para o usuário. Sem `useTranslation`. Sem `catch` vazio.
 
-Detalhe na skill `sydle`, arquivo `plataforma.md`.
+Detalhe na skill `sydle`, arquivo `references/plataforma.md`.
