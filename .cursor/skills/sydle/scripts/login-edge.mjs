@@ -37,7 +37,7 @@ if (!cliente || !ambiente) {
 const urlApiEnv = urlApiAmbiente(cliente, ambiente);
 const origem = origemApi(urlApiEnv);
 const urlLogin = origem;
-const urlApiSessao = origem + "/api/1/elogroup";
+const aplicacaoEnv = aplicacaoDaUrl(urlApiEnv);
 const perfilEdge = join(tmpdir(), "sydle-edge-login-" + cliente + "-" + ambiente);
 
 let processoEdge = null;
@@ -63,12 +63,11 @@ try {
     console.log("Pagina da sessao: " + (credencial.pagina || "(indisponivel)"));
     console.log("Chaves: " + (credencial.chaves || []).join(", "));
     console.log("Chave usada: " + (credencial.chaveUsada || "(nenhuma)"));
-    await sondarValidacao(origem, credencial.token, credencial.chaves);
-    await validarToken(origem, credencial.token);
+    const aplicacao = await validarToken(origem, credencial.token, aplicacoesCandidatas(credencial));
 
     salvarSessao(cliente, ambiente, {
         origem,
-        urlApi: urlApiSessao,
+        urlApi: origem + "/api/1/" + aplicacao,
         token: credencial.token,
         expiraEm: credencial.expiraEm,
         usuario: credencial.usuario,
@@ -274,20 +273,32 @@ function urlSemConsulta(url) {
     }
 }
 
-async function sondarValidacao(origemBase, token, chaves) {
+function aplicacaoDaUrl(urlApi) {
+    const partes = new URL(urlApi).pathname.split("/").filter(Boolean);
+
+    if (partes[0] === "api" && partes[1] === "1" && partes[2] && /^[A-Za-z0-9_-]+$/.test(partes[2])) {
+        return partes[2];
+    }
+
+    return "";
+}
+
+function aplicacoesCandidatas(credencial) {
     const aplicacoes = [];
 
-    for (const aplicacao of ["elogroup"].concat(chaves || [])) {
-        if (aplicacoes.includes(aplicacao)) {
-            continue;
-        }
-
-        if (!/^[A-Za-z0-9_-]+$/.test(aplicacao)) {
+    for (const aplicacao of [aplicacaoEnv, credencial.chaveUsada, "elogroup"].concat(credencial.chaves || [])) {
+        if (!aplicacao || aplicacoes.includes(aplicacao) || !/^[A-Za-z0-9_-]+$/.test(aplicacao)) {
             continue;
         }
 
         aplicacoes.push(aplicacao);
     }
+
+    return aplicacoes;
+}
+
+async function validarToken(origemBase, token, aplicacoes) {
+    let ultimoStatus = 0;
 
     for (const aplicacao of aplicacoes) {
         const resposta = await requisitarJson(
@@ -297,19 +308,14 @@ async function sondarValidacao(origemBase, token, chaves) {
         );
 
         console.log("validateToken /api/1/" + aplicacao + " status " + resposta.status);
-    }
-}
+        ultimoStatus = resposta.status;
 
-async function validarToken(origemBase, token) {
-    const resposta = await requisitarJson(
-        "GET",
-        origemBase + "/api/1/elogroup/sys/auth/validateToken",
-        { Authorization: "Bearer " + token }
-    );
-
-    if (resposta.status !== 200) {
-        throw new Error("Token capturado, mas validateToken retornou " + resposta.status + ".");
+        if (resposta.status === 200) {
+            return aplicacao;
+        }
     }
+
+    throw new Error("Token capturado, mas validateToken retornou " + ultimoStatus + ".");
 }
 
 async function fecharEdge(porta, processo) {

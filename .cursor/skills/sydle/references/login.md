@@ -58,7 +58,7 @@ Não há lista fechada. Um ambiente entra quando o link é enviado e vira a vari
 
 Chave `CLIENTE:AMBIENTE`. Campos: `origem`, `urlApi`, `token`, `expiraEm` (`payload.exp`, segundos Unix), `obtidoEm`, `usuario`.
 
-Após login pelo Explorer, `urlApi` fica `{origem}/api/1/elogroup` (app em que o token do Explorer autentica).
+Após login pelo Explorer, `urlApi` fica `{origem}/api/1/<aplicacao>` da aplicação em que `validateToken` responde 200. A ordem é a aplicação da `URL` do `.env`, a chave do `explorer_user_map` e, por último, `elogroup`.
 
 Fora do git, na pasta da skill, junto com `.env`.
 
@@ -75,8 +75,8 @@ O retorno já inclui `Bearer `. A função falha se não houver sessão, ou 60 s
 Conferir a sessão:
 
 ```http
-GET {origem}/api/1/elogroup/sys/auth/validateToken
+GET {origem}/api/1/<aplicacao>/sys/auth/validateToken
 Authorization: Bearer <token>
 ```
 
-`200` confirma. Não imprimir o corpo se ele trouxer o token. Não pedir login nem senha para renovar.
+`<aplicacao>` é a da `urlApi` gravada. `200` confirma. Não imprimir o corpo se ele trouxer o token. Não pedir login nem senha para renovar.

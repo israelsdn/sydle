@@ -50,7 +50,7 @@ SYDLE, classe, método embarcado, pacote, ambiente (TJCE, MPCE, SEMAS, DEV, HOM,
 
 ## Verificação
 
-O Edge abre `{origem}`. A sessão vale quando `GET {origem}/api/1/elogroup/sys/auth/validateToken` responde 200, sem imprimir o corpo. Chamada HTTP cita o nome da variável ausente, nunca o valor. Identifier novo não carrega partícula que só liga palavras. Script embarcado segue a ordem do [scripts-embarcados.md](references/scripts-embarcados.md).
+O Edge abre `{origem}`. A sessão vale quando `GET {urlApi}/sys/auth/validateToken` responde 200, sem imprimir o corpo. `urlApi` é a aplicação da `URL` do `.env` quando esse `validateToken` passa. Chamada HTTP cita o nome da variável ausente, nunca o valor. Identifier novo não carrega partícula que só liga palavras. Script embarcado segue a ordem do [scripts-embarcados.md](references/scripts-embarcados.md).
 
 O pacote está íntegro quando este arquivo tem `name`, `description` e `version`, a `description` tem até 1024 caracteres, os cinco links acima resolvem e [login-edge.mjs](scripts/login-edge.mjs) continua no path citado.
 
