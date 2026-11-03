@@ -7,7 +7,7 @@ description: >-
   quebra de tarefa, de task, de PB, de Product Backlog Item, de feature
   ou de epic a partir de uma especificação. Não cadastra no Azure e não
   altera a plataforma SYDLE (só leitura via skill sydle).
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Quebra de tarefas
@@ -68,6 +68,10 @@ consulta necessária, cite o nome da variável ausente
    Não omitir regra, campo, método ou fluxo só para enxugar a lista.
 3. Mapear classes e artefatos SYDLE citados ou implicados. Consulta só
    leitura pela skill `sydle`, nos ambientes cadastrados necessários.
+   Uma classe: consultar neste agente. Duas ou mais: login neste agente,
+   uma vez, se a sessão não existir; depois um subagent `map-sydle-class`
+   por classe, em paralelo. Cada um recebe nome, cliente, ambientes e o
+   trecho da spec que cita a classe. Juntar os registros curtos no mapa.
 4. Separar: classe nova; classe já em HOM/PROD; alteração sensível
    (método padrão, permissão, unicidade, integração).
 5. Abrir cards de confirmação (`AskQuestion`) antes de fechar o plano.
@@ -100,6 +104,12 @@ Use a skill `sydle` para login, sessão e consulta. Só `_get`, `_search`,
 `getObjectList`, `_getHistory` e equivalentes de leitura. Não `_patch`,
 não gravar classe, não executar método de negócio só para “testar”.
 
+Uma classe fica neste agente. Duas ou mais vão para o subagent
+`map-sydle-class` (`.cursor/agents/map-sydle-class.md`), um por classe,
+em paralelo, depois do login. O subagent não abre o Edge, não grava
+sessão e não altera a plataforma. O mapa usa o registro curto que ele
+devolve, sem colar o JSON da API.
+
 Não inventar id de classe, template ou atribuição. Classe não encontrada
 fica marcada como não encontrada, com o ambiente tentado.
 
@@ -113,6 +123,8 @@ fica marcada como não encontrada, com o ambiente tentado.
 - Não pula nível da hierarquia.
 - Não agrupa funcionalidades distintas numa task só para reduzir quantidade.
 - Não fecha o plano sem as confirmações.
+- Com duas ou mais classes, não consulta todas neste agente. O login
+  fica aqui; a consulta vai para `map-sydle-class`.
 
 ## Verificação
 
@@ -122,6 +134,8 @@ O entregável está pronto quando:
 - cada task aponta evidência na spec;
 - classes citadas foram conferidas no ambiente ou marcadas como não
   encontradas;
+- com duas ou mais classes, o mapa é a união dos registros de
+  `map-sydle-class`;
 - os cards (ou perguntas equivalentes) foram respondidos;
 - o handoff Azure está explícito e esta skill não cadastrou nada.
 
@@ -130,8 +144,9 @@ O entregável está pronto quando:
 Falhou se cadastrou no Azure, se alterou ambiente SYDLE, se inventou
 classe ou id, se pulou nível da hierarquia, se entregou plano aprovado
 sem confirmação, se omitiu impacto em classe já existente em HOM/PROD
-quando a spec a altera, ou se comprimiu funcionalidades distintas numa
-task só para reduzir quantidade.
+quando a spec a altera, se comprimiu funcionalidades distintas numa
+task só para reduzir quantidade, ou se, com duas ou mais classes,
+consultou todas neste agente.
 
 ## Owner
 
