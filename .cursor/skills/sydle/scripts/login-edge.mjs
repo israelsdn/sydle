@@ -36,7 +36,7 @@ if (!cliente || !ambiente) {
 
 const urlApiEnv = urlApiAmbiente(cliente, ambiente);
 const origem = origemApi(urlApiEnv);
-const urlLogin = origem + "/app/elogroup";
+const urlLogin = origem;
 const urlApiSessao = origem + "/api/1/elogroup";
 const perfilEdge = join(tmpdir(), "sydle-edge-login-" + cliente + "-" + ambiente);
 
@@ -60,6 +60,10 @@ try {
     );
 
     const credencial = await esperarToken(PORTA_DEBUG, TEMPO_MAXIMO_MS);
+    console.log("Pagina da sessao: " + (credencial.pagina || "(indisponivel)"));
+    console.log("Chaves: " + (credencial.chaves || []).join(", "));
+    console.log("Chave usada: " + (credencial.chaveUsada || "(nenhuma)"));
+    await sondarValidacao(origem, credencial.token, credencial.chaves);
     await validarToken(origem, credencial.token);
 
     salvarSessao(cliente, ambiente, {
@@ -79,10 +83,11 @@ try {
             "."
     );
 
-    await fecharEdge(PORTA_DEBUG, processoEdge);
 } catch (erro) {
     console.error(String(erro && erro.message ? erro.message : erro));
     process.exitCode = 1;
+} finally {
+    await fecharEdge(PORTA_DEBUG, processoEdge);
 }
 
 function abrirEdge(url, perfil, porta) {
@@ -128,6 +133,8 @@ async function esperarToken(porta, tempoMaximoMs) {
     let avisouCurto = false;
     let candidata = null;
     let pollsEstaveis = 0;
+    let paginaLogada = "";
+    let chavesLogadas = "";
 
     while (Date.now() - inicio < tempoMaximoMs) {
         try {
@@ -141,6 +148,21 @@ async function esperarToken(porta, tempoMaximoMs) {
 
             if (paginaSydle) {
                 const credencial = await lerCredencialPagina(paginaSydle.webSocketDebuggerUrl);
+
+                if (credencial) {
+                    const pagina = urlSemConsulta(paginaSydle.url);
+                    const chavesTexto = credencial.semMapa
+                        ? "(ausente)"
+                        : (credencial.chaves || []).join(", ");
+
+                    if (pagina !== paginaLogada || chavesTexto !== chavesLogadas) {
+                        console.log("Pagina: " + pagina);
+                        console.log("Chaves: " + chavesTexto);
+                        console.log("Chave usada: " + (credencial.chaveUsada || "(nenhuma)"));
+                        paginaLogada = pagina;
+                        chavesLogadas = chavesTexto;
+                    }
+                }
 
                 if (credencial?.token) {
                     const agora = Math.floor(Date.now() / 1000);
@@ -185,6 +207,7 @@ async function esperarToken(porta, tempoMaximoMs) {
                         }
 
                         if (pollsEstaveis >= POLLS_ESTAVEIS) {
+                            candidata.pagina = urlSemConsulta(paginaSydle.url);
                             return candidata;
                         }
                     }
@@ -212,22 +235,22 @@ async function lerCredencialPagina(webSocketUrl) {
             const bruto = localStorage.getItem("explorer_user_map");
 
             if (!bruto) {
-                return null;
+                return { semMapa: true };
             }
 
             const mapa = JSON.parse(bruto);
-            const aplicativo = mapa.elogroup || Object.values(mapa)[0];
+            const chaves = Object.keys(mapa);
+            const chaveUsada = mapa.elogroup ? "elogroup" : (chaves[0] || null);
+            const aplicativo = chaveUsada ? mapa[chaveUsada] : null;
             const usuario = aplicativo && aplicativo.users && aplicativo.users[0];
             const acesso = usuario && usuario.accessToken;
 
-            if (!acesso || !acesso.token) {
-                return null;
-            }
-
             return {
-                token: acesso.token,
-                expiraEm: acesso.payload && acesso.payload.exp ? acesso.payload.exp : null,
-                usuario: usuario.login || usuario.name || null,
+                token: acesso && acesso.token ? acesso.token : null,
+                expiraEm: acesso && acesso.payload && acesso.payload.exp ? acesso.payload.exp : null,
+                usuario: usuario ? (usuario.login || usuario.name || null) : null,
+                chaves: chaves,
+                chaveUsada: chaveUsada,
             };
         }).toString();
 
@@ -239,6 +262,41 @@ async function lerCredencialPagina(webSocketUrl) {
         return resultado?.result?.value || null;
     } finally {
         close();
+    }
+}
+
+function urlSemConsulta(url) {
+    try {
+        const endereco = new URL(url);
+        return endereco.origin + endereco.pathname;
+    } catch {
+        return "(url indisponivel)";
+    }
+}
+
+async function sondarValidacao(origemBase, token, chaves) {
+    const aplicacoes = [];
+
+    for (const aplicacao of ["elogroup"].concat(chaves || [])) {
+        if (aplicacoes.includes(aplicacao)) {
+            continue;
+        }
+
+        if (!/^[A-Za-z0-9_-]+$/.test(aplicacao)) {
+            continue;
+        }
+
+        aplicacoes.push(aplicacao);
+    }
+
+    for (const aplicacao of aplicacoes) {
+        const resposta = await requisitarJson(
+            "GET",
+            origemBase + "/api/1/" + aplicacao + "/sys/auth/validateToken",
+            { Authorization: "Bearer " + token }
+        );
+
+        console.log("validateToken /api/1/" + aplicacao + " status " + resposta.status);
     }
 }
 

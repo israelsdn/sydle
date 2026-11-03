@@ -10,7 +10,7 @@ Um ambiente é cliente + estágio. A lista não é fechada: o link chega quando 
 SYDLE_<CLIENTE>_<AMBIENTE>_URL
 ```
 
-`URL` vai até a aplicação, sem barra final: `https://<host>/api/1/<aplicacao>`. A aplicação de login, em todos os ambientes, é `elogroup`: interface `{origem}/app/elogroup`.
+`URL` vai até a aplicação, sem barra final: `https://<host>/api/1/<aplicacao>`. O login no Edge abre só `{origem}`, o host dessa URL.
 
 O header `Authorization` das chamadas sai de `obterAuthorizationSessao`. A função de chamada recebe `baseUrl` e esse header já montado. Não concatenar `Bearer` ou `Basic` dentro da função. Não logar esse header.
 

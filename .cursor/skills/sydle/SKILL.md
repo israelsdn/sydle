@@ -5,7 +5,7 @@ description: >-
   usuário mencionar SYDLE, classe, método embarcado, pacote, ambiente
   (TJCE, MPCE, SEMAS, DEV, HOM, PROD), login, sessão, token, _get, _search,
   _patch ou automação na plataforma. Não é creating-a-skill nem create-rule.
-version: 1.3.0
+version: 1.4.1
 ---
 
 # SYDLE ONE
@@ -42,21 +42,21 @@ SYDLE, classe, método embarcado, pacote, ambiente (TJCE, MPCE, SEMAS, DEV, HOM,
 
 - Não pedir usuário nem senha. Não imprimir token.
 - Não inventar host, id de classe, template ou atribuição.
-- Não abrir o browser do Cursor para login. O login é o Edge, pelo `login-edge.mjs`.
-- Ao abrir o Edge, abrir na mesma hora o card de confirmação e só então verificar a sessão. Não esperar a janela fechar. Depois de gravar a sessão, o script fecha o Edge.
+- Não abrir o browser do Cursor para login. O login é o Edge, pelo `login-edge.mjs`, em `{origem}` (o host da URL). Sem rota `/app/elogroup`.
+- Ao abrir o Edge, abrir na mesma hora o card de confirmação e só então verificar a sessão. Não esperar a janela fechar. O script fecha o Edge ao terminar, também quando a validação falha.
 - Não persistir em rascunho nem em `_getMetadata`.
 - Script embarcado não chama a API por HTTP. Tooling externo não usa `_utils` como se fosse script da plataforma.
 - Não gravar outra skill com estes gatilhos.
 
 ## Verificação
 
-A sessão vale quando `GET {origem}/api/1/elogroup/sys/auth/validateToken` responde 200, sem imprimir o corpo. Chamada HTTP cita o nome da variável ausente, nunca o valor. Identifier novo não carrega partícula que só liga palavras. Script embarcado segue a ordem do [scripts-embarcados.md](references/scripts-embarcados.md).
+O Edge abre `{origem}`. A sessão vale quando `GET {origem}/api/1/elogroup/sys/auth/validateToken` responde 200, sem imprimir o corpo. Chamada HTTP cita o nome da variável ausente, nunca o valor. Identifier novo não carrega partícula que só liga palavras. Script embarcado segue a ordem do [scripts-embarcados.md](references/scripts-embarcados.md).
 
 O pacote está íntegro quando este arquivo tem `name`, `description` e `version`, a `description` tem até 1024 caracteres, os cinco links acima resolvem e [login-edge.mjs](scripts/login-edge.mjs) continua no path citado.
 
 ## Critério de falha
 
-Falhou se conectou sem `URL` no `.env`, se inventou host ou id, se pediu senha, se abriu o browser do Cursor para login, se esperou o Edge fechar para verificar a sessão, se a `description` passou de 1024 caracteres ou passou a narrar o fluxo, ou se um reference aponta para outro reference.
+Falhou se conectou sem `URL` no `.env`, se inventou host ou id, se pediu senha, se abriu o browser do Cursor para login, se o Edge abriu em `/app/elogroup`, se esperou o Edge fechar para verificar a sessão, se a `description` passou de 1024 caracteres ou passou a narrar o fluxo, ou se um reference aponta para outro reference.
 
 ## Owner
 

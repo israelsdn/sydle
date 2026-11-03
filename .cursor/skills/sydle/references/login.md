@@ -2,7 +2,7 @@
 
 Não há usuário nem senha no `.env`. O `.env` guarda só o link do ambiente (`SYDLE_<CLIENTE>_<AMBIENTE>_URL`). A sessão das chamadas fica em `.sydle-session.json`. Os dois arquivos ficam em `.cursor/skills/sydle/`, junto com a skill.
 
-A aplicação de login é `elogroup` em qualquer cliente e estágio. A rota de interface é `{origem}/app/elogroup`.
+O Edge abre `{origem}`, o host de `SYDLE_<CLIENTE>_<AMBIENTE>_URL`. Não há rota fixa de aplicação na interface.
 
 ## Regra do browser
 
@@ -22,13 +22,13 @@ node .cursor/skills/sydle/scripts/login-edge.mjs TJCE DEV
 
 O script:
 
-1. Abre o Edge com perfil temporário e remote debugging
+1. Abre o Edge em `{origem}`, com perfil temporário e remote debugging
 2. Espera o usuário autenticar (Microsoft Elogroup ou formulário)
 3. Lê o token de `explorer_user_map` no `localStorage`
 4. **Não grava o primeiro token**: o Explorer costuma emitir um access token curto (~1 min) e só depois renovar. O script só aceita quando a validade restante passa de `SYDLE_TOKEN_MIN_TTL_S` (padrão 300 s) e a leitura se estabiliza
 5. Valida com `validateToken`
 6. Grava `.sydle-session.json`
-7. **Fecha** a janela do Edge
+7. **Fecha** a janela do Edge ao terminar, também quando a validação falha
 
 Não pedir usuário nem senha no chat. O fechamento acontece depois que a sessão é gravada. A verificação não espera essa janela fechar: o card de confirmação é que libera o próximo passo.
 
