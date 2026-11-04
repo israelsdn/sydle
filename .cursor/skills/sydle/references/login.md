@@ -1,6 +1,6 @@
 # Login
 
-Não há usuário nem senha no `.env`. O `.env` guarda só o link do ambiente (`SYDLE_<CLIENTE>_<AMBIENTE>_URL`). A sessão das chamadas fica em `.sydle-session.json`. Os dois arquivos ficam em `.cursor/skills/sydle/`, junto com a skill.
+Não há usuário nem senha no `.env`. O `.env` guarda só o link do ambiente (`SYDLE_<CLIENTE>_<AMBIENTE>_URL`). A sessão das chamadas fica em `.sydle-session.json`. Os dois arquivos ficam em `.cursor/skills/sydle/`, junto com a skill. O token não fica em texto puro: a gravação cifra com o DPAPI do usuário atual do Windows.
 
 O Edge abre `{origem}`, o host de `SYDLE_<CLIENTE>_<AMBIENTE>_URL`. Não há rota fixa de aplicação na interface.
 
@@ -45,7 +45,7 @@ Opções, nesta ordem:
 
 Subir o script em segundo plano (`block_until_ms` curto, só até aparecer "Edge aberto"). No mesmo turno, abrir o card. Não bloquear o turno até o Edge fechar.
 
-- `verificar`: ler `.sydle-session.json` da chave `CLIENTE:AMBIENTE` e chamar `validateToken`. `200` confirma. Não imprimir o corpo nem o token. Dizer se a sessão foi concluída e o usuário, quando houver. Sem token gravado, ou com `validateToken` diferente de 200, dizer que a sessão não foi concluída e abrir o card de novo.
+- `verificar`: ler a chave `CLIENTE:AMBIENTE` com `obterSessao` e chamar `validateToken` usando `obterAuthorizationSessao`. `200` confirma. Não imprimir o corpo nem o token. Não tratar `tokenProtegido` como Bearer. Dizer se a sessão foi concluída e o usuário, quando houver. Sem sessão gravada, ou com `validateToken` diferente de 200, dizer que a sessão não foi concluída e abrir o card de novo.
 - `aguardar`: abrir o card de novo. Não encerrar o login. A janela segue aberta até a sessão ser gravada.
 
 Depois de gravar a sessão, o script fecha o Edge. Não usar esse fechamento como sinal para verificar.
@@ -56,7 +56,9 @@ Não há lista fechada. Um ambiente entra quando o link é enviado e vira a vari
 
 ## Arquivo `.sydle-session.json`
 
-Chave `CLIENTE:AMBIENTE`. Campos: `origem`, `urlApi`, `token`, `expiraEm` (`payload.exp`, segundos Unix), `obtidoEm`, `usuario`.
+Chave `CLIENTE:AMBIENTE`. Campos: `origem`, `urlApi`, `protecao` (`dpapi-usuario`), `tokenProtegido`, `expiraEm` (`payload.exp`, segundos Unix), `obtidoEm`, `usuario`.
+
+`tokenProtegido` é o token cifrado com DPAPI no escopo do usuário atual do Windows. Copiar o arquivo para outra conta ou outra máquina não recupera o acesso. A leitura em memória passa por `obterSessao` e `obterAuthorizationSessao`. Sessão antiga com `token` em texto puro é regravada cifrada na próxima leitura. O arquivo fica restrito ao usuário atual.
 
 Após login pelo Explorer, `urlApi` fica `{origem}/api/1/<aplicacao>` da aplicação em que `validateToken` responde 200. A ordem é a aplicação da `URL` do `.env`, a chave do `explorer_user_map` e, por último, `elogroup`.
 

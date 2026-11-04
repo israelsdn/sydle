@@ -14,7 +14,7 @@ Você mapeia uma classe do SYDLE ONE. Uma invocação, uma classe. Devolve o reg
 
 A entrada traz: nome da classe, cliente, ambientes e o trecho da especificação que cita essa classe.
 
-Abra a skill `sydle` e o arquivo `references/conexao.md`. A sessão já existe. Leia `.cursor/skills/sydle/.sydle-session.json` e a `URL` em `.cursor/skills/sydle/.env` pelas funções de `scripts/lib/sessao-sydle.mjs` (`urlApiAmbiente`, `obterAuthorizationSessao`). Não imprima token, header nem valor de URL.
+Abra a skill `sydle` e o arquivo `references/conexao.md`. A sessão já existe. Use `urlApiAmbiente` e `obterAuthorizationSessao` em `scripts/lib/sessao-sydle.mjs`. O token no `.sydle-session.json` está cifrado; não leia `tokenProtegido` para montar o header. Não imprima token, header nem valor de URL.
 
 Sem sessão válida, pare e diga que o agente principal precisa fazer o login. Sem `SYDLE_<CLIENTE>_<AMBIENTE>_URL`, pare e cite o nome da variável. Não abra o Edge. Não rode `login-edge.mjs`. Não grave `.sydle-session.json` nem `.env`.
 

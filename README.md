@@ -63,7 +63,7 @@ Com a URL já salva, o pedido no chat é direto:
 
 No login, o Edge abre no host da URL salva. A pessoa autentica na janela. No mesmo momento o chat abre um card para confirmar que o login terminou. A sessão só vale depois dessa confirmação e de o token ser aceito. O Edge fecha quando o script termina, também se a validação falhar. A janela fechar não substitui o card.
 
-A sessão fica em `.cursor/skills/sydle/.sydle-session.json`, na chave `CLIENTE:AMBIENTE`. O Azure usa `.cursor/skills/register-azure-boards/.azure-session.json`.
+A sessão fica em `.cursor/skills/sydle/.sydle-session.json`, na chave `CLIENTE:AMBIENTE`. O token é cifrado com a proteção do usuário do Windows. O Azure usa `.cursor/skills/register-azure-boards/.azure-session.json`.
 
 ## O que não vai para o git
 

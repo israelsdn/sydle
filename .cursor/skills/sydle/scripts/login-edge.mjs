@@ -87,6 +87,7 @@ try {
     process.exitCode = 1;
 } finally {
     await fecharEdge(PORTA_DEBUG, processoEdge);
+    await apagarPerfilTemporario(perfilEdge);
 }
 
 function abrirEdge(url, perfil, porta) {
@@ -367,8 +368,24 @@ function limparPerfil(perfil) {
     try {
         rmSync(perfil, { recursive: true, force: true });
     } catch {
-        // Perfil em uso residual; Edge reaproveita.
+        // Perfil em uso residual; a tentativa seguinte apaga.
     }
+}
+
+async function apagarPerfilTemporario(perfil) {
+    for (const espera of [0, 300, 400, 500, 700]) {
+        if (espera > 0) {
+            await dormir(espera);
+        }
+
+        limparPerfil(perfil);
+
+        if (!existsSync(perfil)) {
+            return;
+        }
+    }
+
+    console.error("O perfil temporário do Edge não pôde ser apagado.");
 }
 
 function listarPaginas(porta) {
