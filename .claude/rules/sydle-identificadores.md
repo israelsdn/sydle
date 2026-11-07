@@ -1,0 +1,23 @@
+---
+description: Identificadores SYDLE em português, sem partícula de ligação
+---
+
+# Identificadores
+
+Identifier em português. Classe em `PascalCase`. Campo, método, opção e variável em `camelCase`.
+
+O label visível pode ter preposição. O identifier não leva partícula que só liga palavras: `da`, `do`, `de`, `e`, `a`, `o` e equivalentes.
+
+```javascript
+// ruim
+numeroDaLiquidacao
+
+// bom
+numeroLiquidacao
+```
+
+Não cortar partícula que faz parte da palavra (`detalhe`, `destino`, `empenhado`). Campo que ainda vai virar referência: identifier definitivo + `Alterar`.
+
+Pergunta em forma afirmativa (`ativo`, não `naoAtivo`). Método começa por verbo.
+
+Detalhe na skill `sydle`, arquivo `references/identificadores.md`.

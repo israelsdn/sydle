@@ -1,19 +1,19 @@
 # SYDLE
 
-Skills e regras do Cursor para o SYDLE ONE. Cliente e estágio identificam o ambiente (`TJCE` + `DEV`). Abra só o arquivo da tarefa.
+Skills e regras do Claude Code para o SYDLE ONE. Cliente e estágio identificam o ambiente (`TJCE` + `DEV`). Abra só o arquivo da tarefa.
 
 | Pedido | Onde |
 |---|---|
-| Login, API, script embarcado, identifier | skill `sydle` (`.cursor/skills/sydle/`) |
-| Como a plataforma funciona: método, campo, busca, processo, fila, `_utils`, Sybox, documento oficial, portal, folha, eSocial | skill `conhecimento-sydle` (`.cursor/skills/conhecimento-sydle/`) |
-| Liquidação, NL, PD, OB, solicitação de pagamento, credor de retenção, programação de desembolso, ordem bancária ou swagger desses documentos | skill `liquidacao` (`.cursor/skills/liquidacao/`) |
-| Criar, autorar ou versionar uma skill | skill `creating-a-skill` (`.cursor/skills/creating-a-skill/`) |
-| Cadastrar work item, task, PB, feature ou epic no Azure, Azure Boards ou Azure DevOps | skill `register-azure-boards` (`.cursor/skills/register-azure-boards/`) |
-| Quebra de tarefa, de task, de PB, de Product Backlog Item, de feature ou de epic | skill `task-breakdown` (`.cursor/skills/task-breakdown/`) |
-| Atualizar o AGENTS.md, o índice, ou incluir uma skill ou regra nova nele | skill `update-agents-md` (`.cursor/skills/update-agents-md/`) |
-| Script ou classe: consultar o conhecimento da plataforma antes de escrever | `.cursor/rules/sydle-conhecimento.mdc` |
-| Motor, erro, modelagem | `.cursor/rules/sydle-plataforma.mdc` |
-| Identifier em português | `.cursor/rules/sydle-identificadores.mdc` |
-| Script em `scripts/**/*.js` | `.cursor/rules/sydle-scripts.mdc` |
+| Login, API, script embarcado, identifier | skill `sydle` (`.claude/skills/sydle/`) |
+| Como a plataforma funciona: método, campo, busca, processo, fila, `_utils`, Sybox, documento oficial, portal, folha, eSocial | skill `sydle-knowledge` (`.claude/skills/sydle-knowledge/`) |
+| Liquidação, NL, PD, OB, solicitação de pagamento, credor de retenção, programação de desembolso, ordem bancária ou swagger desses documentos | skill `sydle-settlement` (`.claude/skills/sydle-settlement/`) |
+| Criar, autorar ou versionar uma skill | skill `creating-a-skill` (`.claude/skills/creating-a-skill/`) |
+| Cadastrar work item, task, PB, feature ou epic no Azure, Azure Boards ou Azure DevOps | skill `register-azure-boards` (`.claude/skills/register-azure-boards/`) |
+| Quebra de tarefa, de task, de PB, de Product Backlog Item, de feature ou de epic | skill `task-breakdown` (`.claude/skills/task-breakdown/`) |
+| Atualizar o AGENTS.md, o índice, ou incluir uma skill ou regra nova nele | skill `update-agents-md` (`.claude/skills/update-agents-md/`) |
+| Script ou classe: consultar o conhecimento da plataforma antes de escrever | `.claude/rules/sydle-conhecimento.md` |
+| Motor, erro, modelagem | `.claude/rules/sydle-plataforma.md` |
+| Identifier em português | `.claude/rules/sydle-identificadores.md` |
+| Script em `scripts/**/*.js` | `.claude/rules/sydle-scripts.md` |
 
 A regra é o recorte curto. O detalhe fica na skill que ela aponta.
